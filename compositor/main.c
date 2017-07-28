@@ -26,6 +26,17 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+ 
+ /*
+  This is (I think) the file that uses libweston to make the default weston shell/WM.
+  Just add comments like this whenever you find out how something works.
+  Info on the #includes would be super helpful, because understanding which
+  modules are part of libweston and which need to be implemented by the shell is
+  important.
+  
+  Comments should not just be before functions! Comment most sub-blocks (if/for/while/whatever else)
+  and really pick this thing apart.
+ */
 
 #include "config.h"
 
@@ -1755,6 +1766,10 @@ copy_command_line(int argc, char * const argv[])
 
 int main(int argc, char *argv[])
 {
+    /*
+        All the int32_t's initilized to zero are what are passing for booleans
+        and used to determine if a command line argument was passed (see below)
+    */
 	int ret = EXIT_FAILURE;
 	char *cmdline;
 	struct wl_display *display;
@@ -1783,7 +1798,15 @@ int main(int argc, char *argv[])
 	struct weston_seat *seat;
 	struct wet_compositor user_data;
 	int require_input;
-
+    
+    /*
+        I think this is kind of like getopts in some languages. This array details
+        what options exist, and provides a pointer to a variable for a parser to
+        store the result of parsing for that option (which could be an int32_t
+        or a string (char*))
+        
+        Someone please figure out what "WESTON_OPTION_STRING" is.
+    */
 	const struct weston_option core_options[] = {
 		{ WESTON_OPTION_STRING, "backend", 'B', &backend },
 		{ WESTON_OPTION_STRING, "shell", 0, &shell },
@@ -1797,15 +1820,35 @@ int main(int argc, char *argv[])
 		{ WESTON_OPTION_BOOLEAN, "no-config", 0, &noconfig },
 		{ WESTON_OPTION_STRING, "config", 'c', &config_file },
 	};
-
+    
+    /*
+        cmdline is a char*
+        
+        Someone with more C experience shine light on this bit please.
+    */
 	cmdline = copy_command_line(argc, argv);
+    
+    /*
+        core_options is an array of weston_option
+        
+        Here we pass in the actual array of structs, also its length, because
+        C can't figure that out, and then the actual arguments received from
+        the command line. parse_options() then parses the opstring and stores
+        its results at the pointers we passed based on core_options
+    */
 	parse_options(core_options, ARRAY_LENGTH(core_options), &argc, argv);
-
+    
+    /*
+        If the help flag was passed, clean up memory, print usage, and exit gracefully
+    */
 	if (help) {
 		free(cmdline);
 		usage(EXIT_SUCCESS);
 	}
-
+    
+    /*
+        If the version flag was passed, print version info, clean up memory, and exit gracefully
+    */
 	if (version) {
 		printf(PACKAGE_STRING "\n");
 		free(cmdline);
